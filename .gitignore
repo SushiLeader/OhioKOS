@@ -1,0 +1,8 @@
+settings.py
+.idea
+__pycache__/
+
+# remove all data files
+kos_data.bak
+kos_data.dat
+kos_data.dir
