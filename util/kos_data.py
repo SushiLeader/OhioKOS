@@ -7,7 +7,7 @@ import shelve
 import settings
 
 
-async def add_kos(user: str, adder: int, reason: str = "沒有提供原因", expire: int = None) -> str:
+async def add_kos(user: int, adder: int, reason: str = "沒有提供原因", expire: int = None) -> str:
     result: str = ""
     try:
         with shelve.open('kos_data') as data:
