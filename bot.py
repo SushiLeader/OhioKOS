@@ -14,7 +14,6 @@ async def load_all_extension():
     cogs = list(filter(lambda filename: filename.endswith('.py'), cogs))
 
     for cog in cogs:
-        print(f"cogs.{cog}")
         await bot.load_extension(f'cogs.{cog.split(".")[0]}')
 
 
