@@ -91,4 +91,6 @@ class ScanServerListTask(Cog):
 
 
 async def setup(bot: Bot):
-    await bot.add_cog(ScanServerListTask(bot))
+    cog = ScanServerListTask(bot)
+    await bot.add_cog(cog)
+    cog.scan_server_list.start()
