@@ -1,4 +1,3 @@
-import json
 import time
 import datetime
 import traceback
@@ -88,3 +87,12 @@ async def cancel_kos(user: str):
         print(traceback.format_exc())
 
     return result
+
+
+async def get_all_ids() -> list[str]:
+    with shelve.open('kos_data') as data:
+        dict_data = dict(data)
+
+    return dict_data
+
+
