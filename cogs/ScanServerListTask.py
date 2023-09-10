@@ -31,8 +31,11 @@ class ScanServerListTask(Cog):
         self.bot = bot
         self.robloxClient = roblox.Client()
 
+        self.scan_server_list.start()
+
     @tasks.loop(minutes=10)
     async def scan_server_list(self, ctx: Context):
+        print("Start scanning")
         # Get the channel to send my informnation
         channel = self.bot.get_channel(settings.BOT_CHANNEL)
 
@@ -93,4 +96,3 @@ class ScanServerListTask(Cog):
 async def setup(bot: Bot):
     cog = ScanServerListTask(bot)
     await bot.add_cog(cog)
-    cog.scan_server_list.start()
