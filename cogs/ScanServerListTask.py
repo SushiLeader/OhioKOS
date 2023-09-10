@@ -31,8 +31,6 @@ class ScanServerListTask(Cog):
         self.bot = bot
         self.robloxClient = roblox.Client()
 
-        self.scan_server_list_task.start()
-
     async def scan_server_list(self):
         print("Start scanning")
 
@@ -96,9 +94,13 @@ class ScanServerListTask(Cog):
     async def scan_server_list_command(self, ctx: Context):
         await self.scan_server_list()
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(minutes=10.0)
     async def scan_server_list_task(self):
         await self.scan_server_list()
+
+    @Cog.listener()
+    async def on_ready(self):
+        await self.scan_server_list_task.start()
 
 
 async def setup(bot: Bot):
