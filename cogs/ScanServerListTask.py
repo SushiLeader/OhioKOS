@@ -1,5 +1,5 @@
 import requests
-from discord.ext.commands import Bot, Cog, Context
+from discord.ext.commands import Bot, Cog, Context, command
 from discord.ext import tasks
 import asyncio
 from util import kos_data
@@ -31,12 +31,12 @@ class ScanServerListTask(Cog):
         self.bot = bot
         self.robloxClient = roblox.Client()
 
-        self.scan_server_list.start()
+        self.scan_server_list_task.start()
 
-    @tasks.loop(minutes=10)
-    async def scan_server_list(self, ctx: Context):
+    async def scan_server_list(self):
         print("Start scanning")
-        # Get the channel to send my informnation
+
+        # Get the channel to send my information
         channel = self.bot.get_channel(settings.BOT_CHANNEL)
 
         await channel.send('開始掃描服務器 (未必可靠)')
@@ -91,6 +91,14 @@ class ScanServerListTask(Cog):
                 break
 
         await channel.send('掃描結束')
+
+    @command('scan-server-list')
+    async def scan_server_list_command(self, ctx: Context):
+        await self.scan_server_list()
+
+    @tasks.loop(minutes=10)
+    async def scan_server_list_task(self):
+        await self.scan_server_list()
 
 
 async def setup(bot: Bot):
