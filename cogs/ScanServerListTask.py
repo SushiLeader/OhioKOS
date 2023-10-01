@@ -18,7 +18,7 @@ async def get_all_thumbnails() -> dict[str, str]:
             url = f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png' \
                   f'&isCircular=false '
             async with session.get(url) as response:
-                if response.status == 200 and :
+                if response.status == 200:
                     data = await response.json()
                     image_url = data["data"][0]["imageUrl"]
                     if image_url != ERROR_IMG_LINK:
