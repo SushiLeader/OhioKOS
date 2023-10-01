@@ -76,7 +76,7 @@ class ScanServerListTask(Cog):
                     ) as response:
                         # Get the data of thumbnails
                         data = await response.json()
-                        thumbnail_data = data.get('data')
+                        thumbnail_data = data['data']
 
                     if not thumbnail_data:
                         continue
