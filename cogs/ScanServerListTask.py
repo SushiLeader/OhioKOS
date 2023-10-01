@@ -17,7 +17,8 @@ async def get_all_thumbnails() -> dict[str, str]:
             url = f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png&isCircular=false'
             async with session.get(url) as response:
                 if response.status == 200:
-                    thumbnails[response.json()["data"][0]["imageUrl"]] = user_id
+                    data = await response.json()
+                    thumbnails[data["data"][0]["imageUrl"]] = user_id
 
             # Wait for a while until next request
             await asyncio.sleep(0.5)
@@ -53,7 +54,7 @@ class ScanServerListTask(Cog):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as response:
                     # Get 100 servers
-                    data = response.json()
+                    data = await response.json()
 
                 # Loop though every server
                 for server in data["data"]:
@@ -74,7 +75,8 @@ class ScanServerListTask(Cog):
                             headers={"Content-Type": "application/json"}
                     ) as response:
                         # Get the data of thumbnails
-                        thumbnail_data = response.json()["data"]
+                        data = await response.json()
+                        thumbnail_data = data.get('data')
 
                     if not thumbnail_data:
                         continue
