@@ -84,7 +84,7 @@ class ScanServerListTask(Cog):
 
                     for thumbnail in thumbnail_data:
                         print(thumbnail['imageUrl'])
-                        if thumbnail['imageUrl'] in all_thumbnails:
+                        if thumbnail['imageUrl'] in all_thumbnails.keys():
                             user_id = all_thumbnails[thumbnail['imageUrl']]
                             user = await self.robloxClient.get_user(int(user_id))
                             await channel.send(settings.LANGUAGE.FOUND_TARGET_MSG.format(
