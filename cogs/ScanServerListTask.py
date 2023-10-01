@@ -11,15 +11,18 @@ async def get_all_thumbnails() -> dict[str, str]:
     data = await kos_data.get_all_ids()
     print(data)
 
+    ERROR_IMG_LINK = 'https://t6.rbxcdn.com/b48637b2a6266bd379a09afb5a8d5131'
     thumbnails = {}
     async with aiohttp.ClientSession() as session:
         for user_id in data:
             url = f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png' \
                   f'&isCircular=false '
             async with session.get(url) as response:
-                if response.status == 200:
+                if response.status == 200 and :
                     data = await response.json()
-                    thumbnails[data["data"][0]["imageUrl"]] = user_id
+                    image_url = data["data"][0]["imageUrl"]
+                    if image_url != ERROR_IMG_LINK:
+                        thumbnails[image_url] = user_id
 
             # Wait for a while until next request
             await asyncio.sleep(0.5)
@@ -83,7 +86,6 @@ class ScanServerListTask(Cog):
                         continue
 
                     for thumbnail in thumbnail_data:
-                        print(thumbnail['imageUrl'])
                         if thumbnail['imageUrl'] in all_thumbnails.keys():
                             user_id = all_thumbnails[thumbnail['imageUrl']]
                             user = await self.robloxClient.get_user(int(user_id))
