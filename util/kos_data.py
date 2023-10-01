@@ -13,7 +13,7 @@ class UserData(TypedDict):
     cancelled: bool
 
 
-async def add_kos(user: str, adder: int, reason: str = "沒有提供原因", expire: int = None) -> str:
+async def add_kos(user: str, adder: int, reason: str = settings.LANGUAGE.NO_REASON_PROVIDED, expire: int = None) -> str:
     result: str = ""
     try:
         with shelve.open('kos_data') as data:
@@ -26,7 +26,7 @@ async def add_kos(user: str, adder: int, reason: str = "沒有提供原因", exp
                 original_adder = user_data["adder"]
                 original_expire = user_data["expire"]
                 cancelled = user_data["cancelled"]
-                print(f"Cancelled: {cancelled}")
+
                 # Checks is the KOS expired
                 expire_is_none = user_data["expire"] is None
                 if not expire_is_none:
@@ -37,19 +37,29 @@ async def add_kos(user: str, adder: int, reason: str = "沒有提供原因", exp
 
                 # Get the expired message
                 if expired:
-                    expired_message: str = f"已在{date.strftime('%Y年%m月%d日 %H時%M分%S秒')}過期"
+                    expired_message: str = settings.LANGUAGE.ALREADY_EXPIRED_MSG.format(
+                        date.strftime(settings.LANGUAGE.TIME_FORMAT))
                 elif cancelled:
-                    expired_message: str = "已取消"
+                    expired_message: str = settings.LANGUAGE.CANCELLED
                 elif expire_is_none:
-                    expired_message: str = "永不過期"
+                    expired_message: str = settings.LANGUAGE.NEVER_EXPIRE
                 else:
-                    expired_message: str = f"原來的過期時間：{date.strftime('%Y年%m月%d日 %H時%M分%S秒')}"
+                    expired_message: str = settings.LANGUAGE.ORIGINAL_EXPIRE_MSG.format(
+                        date=date.strftime(settings.LANGUAGE.TIME_FORMAT)
+                    )
 
                 # Check is the original adder the same adder
                 if user_data["adder"] == adder:
-                    result = f"你之前新增過這個用戶進KOS，原因和過期時間已經更新\n原本的原因：{original_reason}\n{expired_message}"
+                    result = settings.LANGUAGE.ADDED_TO_KOS_BEFORE_BY_SAME_USER_MSG.format(
+                        original_reason=original_reason,
+                        expired_message=expired_message
+                    )
                 else:
-                    result = f"之前<@{original_adder}>新增過這個用戶進KOS\n原本的原因：「{original_reason}」\n{expired_message}"
+                    result = settings.LANGUAGE.ADDED_TO_KOS_BEFORE_BY_ANOTHER_USER_MSG.format(
+                        original_adder=original_adder,
+                        original_reason=original_reason,
+                        expired_message=expired_message
+                    )
 
             # Save the user data
             data[user]: UserData = {
@@ -60,10 +70,10 @@ async def add_kos(user: str, adder: int, reason: str = "沒有提供原因", exp
             }
 
             if not result:
-                result = "成功新增了KOS"''
+                result = settings.LANGUAGE.ADDED_TO_KOS_MSG
 
-    except BaseException as e:
-        result = f"報錯了 <@{settings.AUTHOR}>"
+    except Exception as ex: # NO
+        result = settings.LANGUAGE.ERROR_MSG
         print(traceback.format_exc())
     return result
 
@@ -74,16 +84,16 @@ async def cancel_kos(user: str):
         with shelve.open('kos_data') as data:
             user_data = data.get(user)
             if user_data is None:
-                result = "沒有這個用戶的KOS記錄"
+                result = settings.LANGUAGE.KOS_NOT_FOUND_MSG
             elif user_data["cancelled"]:
-                result = "這個用戶的KOS之前已被取消"
+                result = settings.LANGUAGE.KOS_WAS_CANCELLED_MSG
             else:
                 user_data["cancelled"] = True
                 data[user] = user_data
-                result = "成功取消這個KOS"
+                result = settings.LANGUAGE.KOS_CANCELLED_MSG
 
     except BaseException as e:
-        result = f"報錯了 <@{settings.AUTHOR}>"
+        result = settings.LANGUAGE.ERROR_MSG
         print(traceback.format_exc())
 
     return result
@@ -94,5 +104,3 @@ async def get_all_ids() -> list[str]:
         dict_data = dict(data)
 
     return dict_data
-
-

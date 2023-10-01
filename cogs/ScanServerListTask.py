@@ -1,10 +1,10 @@
-import requests
 from discord.ext.commands import Bot, Cog, Context, command
 from discord.ext import tasks
 import asyncio
 from util import kos_data
 import settings
 import roblox
+import aiohttp
 
 
 async def get_all_thumbnails() -> dict[str, str]:
@@ -12,14 +12,15 @@ async def get_all_thumbnails() -> dict[str, str]:
     print(data)
 
     thumbnails = {}
-    for user_id in data:
-        url = f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png&isCircular=false'
-        response = requests.get(url)
-        if response.status_code != 200:
-            continue
-        thumbnails[response.json()["data"][0]["imageUrl"]] = user_id
-        await asyncio.sleep(0.1)
+    async with aiohttp.ClientSession() as session:
+        for user_id in data:
+            url = f'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds={user_id}&size=150x150&format=Png&isCircular=false'
+            async with session.get(url) as response:
+                if response.status == 200:
+                    thumbnails[response.json()["data"][0]["imageUrl"]] = user_id
 
+            # Wait for a while until next request
+            await asyncio.sleep(0.5)
     return thumbnails
 
 
@@ -32,12 +33,10 @@ class ScanServerListTask(Cog):
         self.robloxClient = roblox.Client()
 
     async def scan_server_list(self):
-        print("Start scanning")
-
         # Get the channel to send my information
         channel = self.bot.get_channel(settings.BOT_CHANNEL)
 
-        await channel.send('開始掃描服務器 (未必可靠)')
+        await channel.send(settings.LANGUAGE.START_SCANNING_SERVER_MSG)
 
         # Get all the thumbnail of KOS player
         all_thumbnails = await get_all_thumbnails()
@@ -51,44 +50,50 @@ class ScanServerListTask(Cog):
             if cursor:
                 url += f"&cursor={cursor}"
 
-            # Get 100 servers
-            data = requests.get(url).json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    # Get 100 servers
+                    data = response.json()
 
-            # Loop though every server
-            for server in data["data"]:
-                server_data = []
-                # Get all player token
-                for player_token in server["playerTokens"]:
-                    server_data.append({
-                        "token": player_token,
-                        "type": "AvatarHeadshot",
-                        "size": "150x150",
-                        "requestId": server["id"]
-                    })
+                # Loop though every server
+                for server in data["data"]:
+                    server_data = []
+                    # Get all player token
+                    for player_token in server["playerTokens"]:
+                        server_data.append({
+                            "token": player_token,
+                            "type": "AvatarHeadshot",
+                            "size": "150x150",
+                            "requestId": server["id"]
+                        })
 
-                # Get all thumbnail from player tokens
-                thumbnail_response = requests.post(
-                    "https://thumbnails.roblox.com/v1/batch",
-                    json=server_data,
-                    headers={"Content-Type": "application/json"})
+                    # Get all thumbnail from player tokens
+                    async with session.post(
+                            "https://thumbnails.roblox.com/v1/batch",
+                            json=server_data,
+                            headers={"Content-Type": "application/json"}
+                    ) as response:
+                        # Get the data of thumbnails
+                        thumbnail_data = response.json()["data"]
 
-                # Get the data of thumbnails
-                thumbnail_data = thumbnail_response.json()["data"]
+                    if not thumbnail_data:
+                        continue
 
-                if not thumbnail_data:
-                    continue
+                    for thumbnail in thumbnail_data:
+                        user_id = all_thumbnails.get(thumbnail["imageUrl"])
+                        if user_id:
+                            user = await self.robloxClient.get_user(int(user_id))
+                            await channel.send(settings.LANGUAGE.FOUND_TARGET_MSG.format(
+                                username=user.name,
+                                display_name=user.display_name,
+                                serverid=thumbnail['requestId'],
+                                userid=user.id
+                            ))
 
-                for thumbnail in thumbnail_data:
-                    user_id = all_thumbnails.get(thumbnail["imageUrl"])
-                    if user_id:
-                        user = await self.robloxClient.get_user(int(user_id))
-                        await channel.send(
-                            f":warning: 發現KOS :warning:\n用戶名: {user.name}\n顯示名: {user.display_name}\n[頭像]({thumbnail['imageUrl']})\n服務器: {thumbnail['requestId']}")
+                if not cursor:
+                    break
 
-            if not cursor:
-                break
-
-        await channel.send('掃描結束')
+        await channel.send(settings.LANGUAGE.SCAN_FINISHED_MSG)
 
     @command('scan-server-list')
     async def scan_server_list_command(self, ctx: Context):

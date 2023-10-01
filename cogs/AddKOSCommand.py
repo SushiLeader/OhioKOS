@@ -1,4 +1,6 @@
 from discord.ext.commands import Bot, Cog, command, Context
+
+import settings
 from util import kos_data
 import time
 import pytimeparse2
@@ -14,7 +16,7 @@ class AddKOSCommand(Cog):
         self.robloxClient = roblox.Client()
 
     @command("add-kos")
-    async def add_kos(self, ctx: Context, kos: str, expire: str = None, reason: str = "沒有提供原因", *args) -> None:
+    async def add_kos(self, ctx: Context, kos: str, expire: str = None, reason: str = settings.LANGUAGE.NO_REASON_PROVIDED, *args) -> None:
         if expire is not None:
             expire = time.time() + pytimeparse2.parse(expire)
 

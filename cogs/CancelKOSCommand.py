@@ -2,9 +2,11 @@ from discord.ext.commands import Bot, Cog, command, Context
 from util import kos_data
 import roblox
 
+
 class CancelKOSCommand(Cog):
     bot: Bot
     robloxClient: roblox.Client
+
     def __init__(self, bot):
         self.bot = bot
         self.robloxClient = roblox.Client()

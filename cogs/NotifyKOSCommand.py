@@ -20,10 +20,10 @@ class NotifyKOSCommand(Cog):
                 break
 
         if author_have_notify_role:
-            return ctx.reply("你已經有這個角色了")
+            return ctx.reply(settings.LANGUAGE.ALREADY_HAVE_ROLE_MSG)
 
         await ctx.author.add_roles(notify_role)
-        await ctx.reply("成功給你這個角色")
+        await ctx.reply(settings.LANGUAGE.ROLE_ADDED_MSG)
 
 
 async def setup(bot: Bot):
